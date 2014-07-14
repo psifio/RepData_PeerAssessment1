@@ -55,13 +55,15 @@ with(groupedByInterval,plot(interval,mean,
 ```{r}
 #first find max value
 maxVal<-max(groupedByInterval$mean)
+print(maxVal)
 #locate the line containing this value
 maxLine<-groupedByInterval[groupedByInterval$mean==maxVal,]
 #find the interval 
 maxInterval<-maxLine$interval
+print(maxInterval)
 ```
-**The maximum number of steps (on average across all the days) is: `r maxVal`  
-and it is contained in interval `r maxInterval`**
+**The maximum number of steps (on average across all the days) is maxVal: `r maxVal`  
+and it is contained in interval maxInterval:`r maxInterval`**
 
 ## Imputing missing values
   
@@ -114,6 +116,34 @@ median(groupedByDate2$sum)
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-***Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.***
+***Create a new factor variable in the dataset with two levels - "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.***  
+
+```{r}
+#add a new column containing day of week
+newdata$weekday=weekdays(newdata$date)
+#add a new column containing either Weekday OR Weekend
+newdata$weekday.type <- ifelse(newdata$weekday == "Saturday" | newdata$weekday == "Sunday", 
+                                "Weekend", 
+                                "Weekday")
+#convert column to factor
+newdata$weekday.type <-factor(newdata$weekday.type )
+```
 
 ***Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).***
+
+```{r fig.width=5, fig.height=5}
+#make a new dataset grouping data by interval and weekday.type
+groupedBy.Interval.WeekDay<-ddply(newdata,~interval+weekday.type,
+                                  summarise,
+                                  mean=mean(steps))
+
+#For a nice plot "unfactor" interval. Be careful to convert to characters first,
+#   or else you get the level values 1,2,3...
+groupedBy.Interval.WeekDay$interval<-as.numeric(as.character(
+                                        groupedBy.Interval.WeekDay$interval))
+library(lattice)
+xyplot(mean ~ interval | weekday.type, groupedBy.Interval.WeekDay, 
+            type = "l", layout = c(1, 2), 
+            xlab = "Interval", 
+            ylab = "Number of steps")
+```
